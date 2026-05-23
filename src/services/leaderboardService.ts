@@ -1,36 +1,32 @@
-import { collection, limit, orderBy, query, serverTimestamp, setDoc, doc } from 'firebase/firestore';
-import { firebase } from '../lib/firebase';
-import type { GameSessionSummary, LeaderboardEntry, LeaderboardScope, PlayerProfile } from '../types';
-
-export interface LeaderboardQuery {
-  scope: LeaderboardScope;
-  dailySeed?: string;
-  friendIds?: string[];
-  limit: number;
-}
-
-export function leaderboardPath(scope: LeaderboardScope, dailySeed?: string): string {
-  if (scope === 'daily') {
-    return `leaderboards/daily-${dailySeed ?? 'today'}/entries`;
-  }
-
-  if (scope === 'friends') {
-    return 'leaderboards/friends/entries';
-  }
-
-  return 'leaderboards/global/entries';
-}
+import { api } from './api';
+import type { GameSessionSummary, LeaderboardScope, PlayerProfile } from '../types';
 
 export async function submitLeaderboardEntry(
   profile: PlayerProfile,
   session: GameSessionSummary,
   scope: LeaderboardScope = 'global',
 ) {
-  if (!firebase.db || profile.mode !== 'google') {
+  if (!profile.token) {
+    cacheLocalEntry(profile, session, scope);
     return;
   }
 
-  const entry: LeaderboardEntry = {
+  try {
+    await api.submitLeaderboard(profile.token, {
+      score: session.score,
+      rankLabel: session.rank,
+      scope,
+    });
+  } catch (error) {
+    console.error(error);
+    cacheLocalEntry(profile, session, scope);
+  }
+}
+
+function cacheLocalEntry(profile: PlayerProfile, session: GameSessionSummary, scope: LeaderboardScope) {
+  const key = `scale.leaderboard.${scope}.v1`;
+  const existing = JSON.parse(localStorage.getItem(key) ?? '[]') as unknown[];
+  const entry = {
     uid: profile.uid,
     displayName: profile.displayName,
     photoURL: profile.photoURL,
@@ -39,15 +35,24 @@ export async function submitLeaderboardEntry(
     createdAt: session.createdAt,
     scope,
   };
-
-  const path = leaderboardPath(scope, session.dailySeed);
-  await setDoc(doc(firebase.db, path, profile.uid), { ...entry, updatedAt: serverTimestamp() }, { merge: true });
+  localStorage.setItem(key, JSON.stringify([entry, ...existing].slice(0, 50)));
 }
 
-export function buildLeaderboardQuery({ scope, dailySeed, limit: entryLimit }: LeaderboardQuery) {
-  if (!firebase.db) {
-    return null;
-  }
+export function loadLocalLeaderboard(scope: LeaderboardScope) {
+  const key = `scale.leaderboard.${scope}.v1`;
+  return JSON.parse(localStorage.getItem(key) ?? '[]') as Array<{
+    displayName: string;
+    score: number;
+    rank: string;
+    createdAt: string;
+  }>;
+}
 
-  return query(collection(firebase.db, leaderboardPath(scope, dailySeed)), orderBy('score', 'desc'), limit(entryLimit));
+export async function fetchLeaderboard(scope: LeaderboardScope, token?: string) {
+  try {
+    const payload = await api.leaderboard(scope, token);
+    return payload.entries as Array<Record<string, unknown>>;
+  } catch {
+    return loadLocalLeaderboard(scope);
+  }
 }

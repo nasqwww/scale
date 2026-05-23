@@ -1,4 +1,5 @@
 import type { ScaleObject } from '../types';
+import { imageSources, resolveObjectImage } from './images';
 
 const cache = new Map<string, Promise<void>>();
 
@@ -10,6 +11,7 @@ function loadImage(src: string): Promise<void> {
   const promise = new Promise<void>((resolve, reject) => {
     const image = new Image();
     image.decoding = 'async';
+    image.loading = 'eager';
     image.onload = () => resolve();
     image.onerror = () => reject(new Error(`Image failed: ${src}`));
     image.src = src;
@@ -20,9 +22,32 @@ function loadImage(src: string): Promise<void> {
 }
 
 export function imageSourcesForObject(object: ScaleObject): string[] {
-  return [object.image.src, ...object.image.fallbacks].filter(Boolean);
+  return imageSources(resolveObjectImage(object));
 }
 
 export function preloadObjectImages(objects: ScaleObject[]): Promise<void[]> {
-  return Promise.all(objects.flatMap(imageSourcesForObject).map((src) => loadImage(src).catch(() => undefined)));
+  const unique = [...new Set(objects.flatMap(imageSourcesForObject))];
+  return Promise.all(unique.map((src) => loadImage(src).catch(() => undefined)));
+}
+
+export async function preloadBootAssets(objects: ScaleObject[], onProgress: (value: number) => void) {
+  const sources = [...new Set(objects.flatMap(imageSourcesForObject))];
+  if (!sources.length) {
+    onProgress(1);
+    return;
+  }
+
+  let loaded = 0;
+  await Promise.all(
+    sources.map(async (src) => {
+      try {
+        await loadImage(src);
+      } catch {
+        /* fallback chain handles runtime */
+      } finally {
+        loaded += 1;
+        onProgress(loaded / sources.length);
+      }
+    }),
+  );
 }

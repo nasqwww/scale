@@ -1,0 +1,60 @@
+{
+  "brand": "SCALE",
+  "tagline": "Percepción humana de la realidad",
+  "loading": {
+    "calibrating": "Calibrando campo de percepción",
+    "syncing": "Sincronizando base de anomalías",
+    "ready": "Bloqueo de realidad listo"
+  },
+  "menu": {
+    "play": "Jugar",
+    "quickPlay": "Partida rápida",
+    "daily": "Desafío diario",
+    "endless": "Modo infinito",
+    "hardcore": "Hardcore",
+    "cosmic": "Modo cósmico",
+    "speed": "Modo velocidad",
+    "multiplayer": "Multijugador",
+    "friends": "Amigos",
+    "leaderboard": "Clasificación",
+    "profile": "Perfil",
+    "collection": "Colección",
+    "achievements": "Logros",
+    "settings": "Ajustes",
+    "about": "Acerca de"
+  },
+  "game": {
+    "lock": "Bloquear medición",
+    "charging": "Resolviendo realidad",
+    "next": "Siguiente anomalía",
+    "complete": "Completar ronda",
+    "round": "Ronda",
+    "preloading": "Precargando telemetría visual",
+    "ready": "Bloqueo visual listo"
+  },
+  "auth": {
+    "title": "Entrar a la red de calibración",
+    "guest": "Jugar como invitado",
+    "login": "Iniciar sesión",
+    "register": "Crear cuenta",
+    "username": "Usuario",
+    "email": "Correo",
+    "password": "Contraseña",
+    "verifyHint": "Revisa tu correo para verificar."
+  },
+  "reveal": {
+    "lock": "Bloqueo de realidad",
+    "yourEstimate": "Tu estimación",
+    "actual": "Real",
+    "error": "error"
+  },
+  "settings": {
+    "language": "Idioma",
+    "audio": "Audio",
+    "haptics": "Hápticos"
+  },
+  "about": {
+    "title": "Sobre SCALE",
+    "body": "SCALE es un juego cinematográfico sobre medir el mundo cuando la intuición falla."
+  }
+}

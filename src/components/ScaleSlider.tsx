@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
+import { useRef } from 'react';
 import { Ruler, Zap } from 'lucide-react';
 import type { ScaleObject } from '../types';
+import { useAudio } from '../context/AudioContext';
+import { useI18n } from '../i18n';
 import { axisCopy, formatMeters } from '../lib/format';
 import { sliderToValue, valueToSlider } from '../lib/slider';
 
@@ -9,12 +12,26 @@ interface ScaleSliderProps {
   value: number;
   disabled: boolean;
   charging: boolean;
+  hideIntro?: boolean;
   onChange: (value: number) => void;
   onLock: () => void;
 }
 
-export function ScaleSlider({ object, value, disabled, charging, onChange, onLock }: ScaleSliderProps) {
+export function ScaleSlider({ object, value, disabled, charging, hideIntro, onChange, onLock }: ScaleSliderProps) {
+  const { t } = useI18n();
+  const audio = useAudio();
+  const lastTick = useRef(0);
   const sliderValue = valueToSlider(value, object.minGuessMeters, object.maxGuessMeters);
+
+  function handleChange(nextSlider: number) {
+    const nextValue = sliderToValue(nextSlider, object.minGuessMeters, object.maxGuessMeters);
+    const now = performance.now();
+    if (now - lastTick.current > 70) {
+      audio.playSliderTick();
+      lastTick.current = now;
+    }
+    onChange(nextValue);
+  }
 
   return (
     <section className="control-panel">
@@ -25,10 +42,16 @@ export function ScaleSlider({ object, value, disabled, charging, onChange, onLoc
             {object.prompt}
           </h3>
         </div>
-        <div className="readout">
+        <motion.div
+          className="readout"
+          key={Math.round(value * 100)}
+          initial={{ scale: 0.96 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 420, damping: 24 }}
+        >
           <Ruler size={18} />
           <span>{formatMeters(value)}</span>
-        </div>
+        </motion.div>
       </div>
 
       <div className="mt-7">
@@ -41,7 +64,7 @@ export function ScaleSlider({ object, value, disabled, charging, onChange, onLoc
           step={0.05}
           type="range"
           value={sliderValue}
-          onChange={(event) => onChange(sliderToValue(Number(event.target.value), object.minGuessMeters, object.maxGuessMeters))}
+          onChange={(event) => handleChange(Number(event.target.value))}
         />
         <div className="mt-3 flex justify-between text-xs uppercase tracking-[0.14em] text-white/[0.42]">
           <span>{formatMeters(object.minGuessMeters)}</span>
@@ -51,7 +74,7 @@ export function ScaleSlider({ object, value, disabled, charging, onChange, onLoc
       </div>
 
       <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm leading-6 text-white/[0.56]">{object.intro}</p>
+        {!hideIntro ? <p className="text-sm leading-6 text-white/[0.56]">{object.intro}</p> : <span />}
         <motion.button
           className="primary-action min-h-[52px] justify-center px-6"
           type="button"
@@ -60,7 +83,7 @@ export function ScaleSlider({ object, value, disabled, charging, onChange, onLoc
           whileTap={{ scale: 0.98 }}
         >
           <Zap size={18} />
-          {charging ? 'Calibrating...' : 'Lock measurement'}
+          {charging ? t('game.charging') : t('game.lock')}
         </motion.button>
       </div>
     </section>

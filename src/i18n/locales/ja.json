@@ -1,0 +1,60 @@
+{
+  "brand": "SCALE",
+  "tagline": "現実のスケールを測る知覚",
+  "loading": {
+    "calibrating": "知覚フィールドを校正",
+    "syncing": "異常データベースを同期",
+    "ready": "リアリティロック準備完了"
+  },
+  "menu": {
+    "play": "プレイ",
+    "quickPlay": "クイックプレイ",
+    "daily": "デイリーチャレンジ",
+    "endless": "エンドレス",
+    "hardcore": "ハードコア",
+    "cosmic": "コズミック",
+    "speed": "スピード",
+    "multiplayer": "マルチプレイ",
+    "friends": "フレンド",
+    "leaderboard": "ランキング",
+    "profile": "プロフィール",
+    "collection": "コレクション",
+    "achievements": "実績",
+    "settings": "設定",
+    "about": "概要"
+  },
+  "game": {
+    "lock": "測定をロック",
+    "charging": "現実を解決中",
+    "next": "次の異常",
+    "complete": "ラン完了",
+    "round": "ラウンド",
+    "preloading": "ビジュアルテレメトリを読込中",
+    "ready": "ビジュアルロック準備完了"
+  },
+  "auth": {
+    "title": "キャリブレーションネットワークへ",
+    "guest": "ゲストでプレイ",
+    "login": "ログイン",
+    "register": "アカウント作成",
+    "username": "ユーザー名",
+    "email": "メール",
+    "password": "パスワード",
+    "verifyHint": "確認メールをチェックしてください。"
+  },
+  "reveal": {
+    "lock": "リアリティロック",
+    "yourEstimate": "あなたの推定",
+    "actual": "実測",
+    "error": "誤差"
+  },
+  "settings": {
+    "language": "言語",
+    "audio": "オーディオ",
+    "haptics": "触覚"
+  },
+  "about": {
+    "title": "SCALEについて",
+    "body": "SCALEは、直感が現実に砕かれる瞬間を体験するシネマティックな測定ゲームです。"
+  }
+}

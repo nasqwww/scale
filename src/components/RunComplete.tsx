@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { RotateCcw, Trophy } from 'lucide-react';
+import { Home, RotateCcw, Trophy } from 'lucide-react';
 import type { GameSessionSummary, RoundResult } from '../types';
 import { formatMeters, formatPercent } from '../lib/format';
 
@@ -7,9 +7,10 @@ interface RunCompleteProps {
   summary: GameSessionSummary;
   results: RoundResult[];
   onRestart: () => void;
+  onMenu: () => void;
 }
 
-export function RunComplete({ summary, results, onRestart }: RunCompleteProps) {
+export function RunComplete({ summary, results, onRestart, onMenu }: RunCompleteProps) {
   return (
     <motion.section
       className="complete-panel"
@@ -39,8 +40,8 @@ export function RunComplete({ summary, results, onRestart }: RunCompleteProps) {
           <strong>{summary.nearPerfects}</strong>
         </div>
         <div className="end-stat">
-          <span>Daily seed</span>
-          <strong>{summary.dailySeed}</strong>
+          <span>Mode</span>
+          <strong className="text-lg capitalize">{summary.mode ?? 'classic'}</strong>
         </div>
       </div>
 
@@ -48,16 +49,24 @@ export function RunComplete({ summary, results, onRestart }: RunCompleteProps) {
         {results.map((result) => (
           <div className="result-row" key={`${result.objectId}-${result.createdAt}`}>
             <span>{result.objectName}</span>
-            <span>{formatMeters(result.guessMeters)} / {formatMeters(result.correctMeters)}</span>
+            <span>
+              {formatMeters(result.guessMeters)} / {formatMeters(result.correctMeters)}
+            </span>
             <strong>+{result.points}</strong>
           </div>
         ))}
       </div>
 
-      <button className="primary-action mt-8 justify-center px-6" type="button" onClick={onRestart}>
-        <RotateCcw size={18} />
-        Recalibrate
-      </button>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <button className="primary-action flex-1 justify-center px-6" type="button" onClick={onRestart}>
+          <RotateCcw size={18} />
+          Recalibrate
+        </button>
+        <button className="secondary-action flex-1 justify-center px-6" type="button" onClick={onMenu}>
+          <Home size={18} />
+          Main menu
+        </button>
+      </div>
     </motion.section>
   );
 }

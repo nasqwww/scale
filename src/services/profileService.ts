@@ -1,9 +1,6 @@
-import { doc, getDoc, setDoc } from 'firebase/firestore';
-import type { User } from 'firebase/auth';
-import { firebase } from '../lib/firebase';
-import type { GameSessionSummary, PlayerProfile, PlayerStats, RoundResult } from '../types';
+import type { GameSessionSummary, LocaleCode, PlayerProfile, PlayerStats, RoundResult } from '../types';
 
-const STORAGE_KEY = 'scale.profile.v1';
+const STORAGE_KEY = 'scale.profile.v2';
 const HISTORY_LIMIT = 25;
 
 const blankStats: PlayerStats = {
@@ -31,6 +28,7 @@ function createGuestId() {
 
 export function createGuestProfile(): PlayerProfile {
   const createdAt = now();
+  const language = (localStorage.getItem('scale.locale.v1') as LocaleCode) || 'en';
 
   return {
     uid: createGuestId(),
@@ -41,11 +39,12 @@ export function createGuestProfile(): PlayerProfile {
     history: [],
     createdAt,
     updatedAt: createdAt,
+    language,
   };
 }
 
 export function loadLocalProfile(): PlayerProfile {
-  const raw = localStorage.getItem(STORAGE_KEY);
+  const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem('scale.profile.v1');
   if (!raw) {
     const profile = createGuestProfile();
     saveLocalProfile(profile);
@@ -53,7 +52,8 @@ export function loadLocalProfile(): PlayerProfile {
   }
 
   try {
-    return { ...createGuestProfile(), ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw) as PlayerProfile;
+    return { ...createGuestProfile(), ...parsed, stats: { ...blankStats, ...parsed.stats } };
   } catch {
     const profile = createGuestProfile();
     saveLocalProfile(profile);
@@ -65,50 +65,8 @@ export function saveLocalProfile(profile: PlayerProfile) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
 }
 
-export async function profileFromGoogleUser(user: User): Promise<PlayerProfile> {
-  const local = loadLocalProfile();
-  const base: PlayerProfile = {
-    ...local,
-    uid: user.uid,
-    mode: 'google',
-    displayName: user.displayName ?? 'Google Player',
-    photoURL: user.photoURL ?? undefined,
-    updatedAt: now(),
-  };
-
-  if (!firebase.db) {
-    saveLocalProfile(base);
-    return base;
-  }
-
-  const ref = doc(firebase.db, 'players', user.uid);
-  const snapshot = await getDoc(ref);
-
-  if (snapshot.exists()) {
-    const cloud = snapshot.data() as PlayerProfile;
-    const merged = {
-      ...base,
-      ...cloud,
-      displayName: user.displayName ?? cloud.displayName ?? base.displayName,
-      photoURL: user.photoURL ?? cloud.photoURL,
-      updatedAt: now(),
-    };
-    saveLocalProfile(merged);
-    return merged;
-  }
-
-  await setDoc(ref, base, { merge: true });
-  saveLocalProfile(base);
-  return base;
-}
-
 export async function persistProfile(profile: PlayerProfile) {
-  const next = { ...profile, updatedAt: now() };
-  saveLocalProfile(next);
-
-  if (firebase.db && next.mode === 'google') {
-    await setDoc(doc(firebase.db, 'players', next.uid), next, { merge: true });
-  }
+  saveLocalProfile({ ...profile, updatedAt: now() });
 }
 
 export async function recordGameSession(

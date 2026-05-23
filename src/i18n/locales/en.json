@@ -1,0 +1,60 @@
+{
+  "brand": "SCALE",
+  "tagline": "Human perception of reality",
+  "loading": {
+    "calibrating": "Calibrating perception field",
+    "syncing": "Syncing anomaly database",
+    "ready": "Reality lock ready"
+  },
+  "menu": {
+    "play": "Play",
+    "quickPlay": "Quick Play",
+    "daily": "Daily Challenge",
+    "endless": "Endless Mode",
+    "hardcore": "Hardcore Mode",
+    "cosmic": "Cosmic Mode",
+    "speed": "Speed Mode",
+    "multiplayer": "Multiplayer",
+    "friends": "Friends",
+    "leaderboard": "Leaderboard",
+    "profile": "Profile",
+    "collection": "Collection",
+    "achievements": "Achievements",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "game": {
+    "lock": "Lock measurement",
+    "charging": "Reality resolving",
+    "next": "Next anomaly",
+    "complete": "Complete run",
+    "round": "Round",
+    "preloading": "Preloading visual telemetry",
+    "ready": "Visual lock ready"
+  },
+  "auth": {
+    "title": "Enter the calibration network",
+    "guest": "Play as Guest",
+    "login": "Sign in",
+    "register": "Create account",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "verifyHint": "Check your inbox for the verification link."
+  },
+  "reveal": {
+    "lock": "Reality lock",
+    "yourEstimate": "Your estimate",
+    "actual": "Actual",
+    "error": "error"
+  },
+  "settings": {
+    "language": "Language",
+    "audio": "Audio",
+    "haptics": "Haptics"
+  },
+  "about": {
+    "title": "About SCALE",
+    "body": "SCALE is a cinematic measurement game about how wrong human intuition feels when reality finally lands."
+  }
+}

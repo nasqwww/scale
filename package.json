@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "dev:server": "npm run dev --prefix server",
+    "dev:all": "npm run dev:server & npm run dev",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "build:server": "npm run build --prefix server",
+    "preview": "vite preview --host 127.0.0.1",
+    "db:migrate": "npm run db:migrate --prefix server"
   },
   "dependencies": {
-    "firebase": "^12.4.0",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",

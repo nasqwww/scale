@@ -1,0 +1,60 @@
+{
+  "brand": "SCALE",
+  "tagline": "Menschliche Wahrnehmung der Realität",
+  "loading": {
+    "calibrating": "Wahrnehmungsfeld kalibrieren",
+    "syncing": "Anomalie-Datenbank synchronisieren",
+    "ready": "Realitätssperre bereit"
+  },
+  "menu": {
+    "play": "Spielen",
+    "quickPlay": "Schnellspiel",
+    "daily": "Tägliche Herausforderung",
+    "endless": "Endlosmodus",
+    "hardcore": "Hardcore",
+    "cosmic": "Kosmosmodus",
+    "speed": "Tempomodus",
+    "multiplayer": "Mehrspieler",
+    "friends": "Freunde",
+    "leaderboard": "Bestenliste",
+    "profile": "Profil",
+    "collection": "Sammlung",
+    "achievements": "Erfolge",
+    "settings": "Einstellungen",
+    "about": "Über"
+  },
+  "game": {
+    "lock": "Messung sperren",
+    "charging": "Realität wird aufgelöst",
+    "next": "Nächste Anomalie",
+    "complete": "Lauf beenden",
+    "round": "Runde",
+    "preloading": "Visuelle Telemetrie laden",
+    "ready": "Visueller Lock bereit"
+  },
+  "auth": {
+    "title": "Kalibrierungsnetz betreten",
+    "guest": "Als Gast spielen",
+    "login": "Anmelden",
+    "register": "Konto erstellen",
+    "username": "Benutzername",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "verifyHint": "Prüfe dein Postfach zur Verifizierung."
+  },
+  "reveal": {
+    "lock": "Realitätssperre",
+    "yourEstimate": "Deine Schätzung",
+    "actual": "Tatsächlich",
+    "error": "Fehler"
+  },
+  "settings": {
+    "language": "Sprache",
+    "audio": "Audio",
+    "haptics": "Haptik"
+  },
+  "about": {
+    "title": "Über SCALE",
+    "body": "SCALE ist ein kinoreifes Mess-Spiel darüber, wie falsch sich Intuition anfühlt, wenn die Wahrheit landet."
+  }
+}

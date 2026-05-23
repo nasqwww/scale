@@ -1,4 +1,4 @@
-import type { MeasurementAxis, ScaleComparison } from '../types';
+import type { MeasurementAxis, ScaleComparison, ScaleObject } from '../types';
 
 const axisNouns: Record<MeasurementAxis, string> = {
   height: 'tall',
@@ -48,8 +48,19 @@ export function describeComparison(correctMeters: number, comparisons: ScaleComp
   const unit = Math.abs(rounded - 1) < 0.05 ? best.comparison.singular : best.comparison.plural;
 
   if (best.count < 0.75) {
-    return `About ${formatMeters(correctMeters)}, less than one ${best.comparison.singular}.`;
+    return `Shorter than one ${best.comparison.singular} — about ${formatMeters(correctMeters)}.`;
   }
 
-  return `Equivalent to about ${rounded} ${unit}.`;
+  if (rounded === 1) {
+    return `About as ${axisCopy('length')} as one ${best.comparison.singular}.`;
+  }
+
+  return `Longer than ${rounded} ${unit}.`;
+}
+
+export function describeCrowdBias(object: ScaleObject): string {
+  const bias = object.crowdBias ?? 'underestimate';
+  if (bias === 'overestimate') return 'Most players overestimate this object.';
+  if (bias === 'split') return 'Players split hard on this one — the truth surprises both sides.';
+  return 'Most players underestimate this object.';
 }

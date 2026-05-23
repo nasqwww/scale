@@ -1,35 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { dailyChallenge, ROUNDS_PER_RUN, scaleObjects } from '../data/scaleObjects';
-import { describeComparison } from '../lib/format';
+import { buildRun, runSeedForMode, roundCountForMode } from '../game/runBuilder';
+import { describeComparison, describeCrowdBias } from '../lib/format';
 import { preloadObjectImages } from '../lib/preload';
-import { nextStreakForBand, rankForScore, scoreGuess } from '../lib/scoring';
-import type { GamePhase, GameSessionSummary, RoundResult, ScaleObject } from '../types';
+import { maxRunScore, nextStreakForBand, rankForScore, scoreGuess } from '../lib/scoring';
+import type { GameMode, GamePhase, GameSessionSummary, RoundResult } from '../types';
 
-function hashSeed(seed: string): number {
-  return [...seed].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 2166136261);
-}
+const CHARGE_MS = 920;
+const SPEED_ROUND_MS = 22_000;
 
-function mulberry32(seed: number) {
-  return function random() {
-    let t = (seed += 0x6d2b79f5);
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
-function curatedRun(seed = dailyChallenge.getSeed()): ScaleObject[] {
-  const random = mulberry32(hashSeed(seed));
-  return [...scaleObjects]
-    .map((object) => ({ object, order: random() + object.difficulty * 0.015 }))
-    .sort((a, b) => a.order - b.order)
-    .slice(0, ROUNDS_PER_RUN)
-    .map(({ object }) => object);
-}
-
-export function useScaleGame() {
-  const [dailySeed] = useState(() => dailyChallenge.getSeed());
-  const [rounds, setRounds] = useState(() => curatedRun(dailySeed));
+export function useScaleGame(mode: GameMode) {
+  const [runSeed, setRunSeed] = useState(() => runSeedForMode(mode));
+  const [rounds, setRounds] = useState(() => buildRun(mode, runSeed));
   const [roundIndex, setRoundIndex] = useState(0);
   const [phase, setPhase] = useState<GamePhase>('guessing');
   const [guessMeters, setGuessMeters] = useState(() => rounds[0].exactMeters * 0.75);
@@ -37,21 +18,57 @@ export function useScaleGame() {
   const [streak, setStreak] = useState(0);
   const [bestStreak, setBestStreak] = useState(0);
   const [isPreloading, setIsPreloading] = useState(true);
+  const [timeLeftMs, setTimeLeftMs] = useState(mode === 'speed' ? SPEED_ROUND_MS : 0);
 
   const currentObject = rounds[roundIndex];
+  const roundCount = rounds.length;
   const totalScore = results.reduce((sum, result) => sum + result.points, 0);
-  const maxScore = ROUNDS_PER_RUN * 1260;
+  const maxScore = maxRunScore(roundCountForMode(mode));
   const latestResult = results[results.length - 1];
+
+  useEffect(() => {
+    const seed = runSeedForMode(mode);
+    const nextRounds = buildRun(mode, seed);
+    setRunSeed(seed);
+    setRounds(nextRounds);
+    setRoundIndex(0);
+    setPhase('guessing');
+    setGuessMeters(nextRounds[0].exactMeters * 0.75);
+    setResults([]);
+    setStreak(0);
+    setBestStreak(0);
+    setTimeLeftMs(mode === 'speed' ? SPEED_ROUND_MS : 0);
+  }, [mode]);
 
   useEffect(() => {
     setIsPreloading(true);
     preloadObjectImages(rounds.slice(roundIndex, roundIndex + 3)).finally(() => setIsPreloading(false));
   }, [roundIndex, rounds]);
 
+  useEffect(() => {
+    if (mode !== 'speed' || phase !== 'guessing') return;
+
+    const started = performance.now();
+    const timer = window.setInterval(() => {
+      const elapsed = performance.now() - started;
+      const remaining = Math.max(0, SPEED_ROUND_MS - elapsed);
+      setTimeLeftMs(remaining);
+      if (remaining <= 0) {
+        window.clearInterval(timer);
+        lockGuess();
+      }
+    }, 120);
+
+    return () => window.clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, phase, roundIndex, currentObject?.id]);
+
   const lockGuess = useCallback(() => {
     if (phase !== 'guessing') return;
 
     setPhase('charging');
+    const chargeDelay = mode === 'hardcore' ? 560 : CHARGE_MS;
+
     window.setTimeout(() => {
       const score = scoreGuess(guessMeters, currentObject.exactMeters, streak);
       const nextStreak = nextStreakForBand(score.band, streak);
@@ -62,15 +79,22 @@ export function useScaleGame() {
         guessMeters,
         correctMeters: currentObject.exactMeters,
         comparisonLine: describeComparison(currentObject.exactMeters, currentObject.comparisons),
+        crowdLine: describeCrowdBias(currentObject),
         createdAt: new Date().toISOString(),
       };
 
       setResults((existing) => [...existing, result]);
       setStreak(nextStreak);
       setBestStreak((existing) => Math.max(existing, nextStreak));
+
+      if (mode === 'endless' && !['impossible', 'surgical', 'near', 'strong'].includes(score.band)) {
+        setPhase('complete');
+        return;
+      }
+
       setPhase('revealed');
-    }, 720);
-  }, [currentObject, guessMeters, phase, streak]);
+    }, chargeDelay);
+  }, [currentObject, guessMeters, mode, phase, streak]);
 
   const nextRound = useCallback(() => {
     if (roundIndex >= rounds.length - 1) {
@@ -82,11 +106,13 @@ export function useScaleGame() {
     setRoundIndex(nextIndex);
     setGuessMeters(rounds[nextIndex].exactMeters * (0.65 + (nextIndex % 3) * 0.25));
     setPhase('guessing');
-  }, [roundIndex, rounds]);
+    setTimeLeftMs(mode === 'speed' ? SPEED_ROUND_MS : 0);
+  }, [mode, roundIndex, rounds]);
 
   const restart = useCallback(() => {
-    const seed = `${dailySeed}-${Date.now()}`;
-    const nextRounds = curatedRun(seed);
+    const seed = runSeedForMode(mode, `${runSeed}-${Date.now()}`);
+    const nextRounds = buildRun(mode, seed);
+    setRunSeed(seed);
     setRounds(nextRounds);
     setRoundIndex(0);
     setPhase('guessing');
@@ -94,7 +120,8 @@ export function useScaleGame() {
     setResults([]);
     setStreak(0);
     setBestStreak(0);
-  }, [dailySeed]);
+    setTimeLeftMs(mode === 'speed' ? SPEED_ROUND_MS : 0);
+  }, [mode, runSeed]);
 
   const sessionSummary = useMemo<GameSessionSummary | null>(() => {
     if (phase !== 'complete') return null;
@@ -110,15 +137,17 @@ export function useScaleGame() {
       nearPerfects,
       averagePercentError,
       createdAt: new Date().toISOString(),
-      dailySeed,
+      dailySeed: mode === 'daily' ? runSeed : undefined,
+      mode,
     };
-  }, [bestStreak, dailySeed, maxScore, phase, results, totalScore]);
+  }, [bestStreak, maxScore, mode, phase, results, runSeed, totalScore]);
 
   return {
+    mode,
     rounds,
     currentObject,
     roundIndex,
-    roundCount: rounds.length,
+    roundCount,
     phase,
     guessMeters,
     setGuessMeters,
@@ -129,6 +158,7 @@ export function useScaleGame() {
     results,
     latestResult,
     isPreloading,
+    timeLeftMs,
     lockGuess,
     nextRound,
     restart,

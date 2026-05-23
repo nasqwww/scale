@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ImageOff } from 'lucide-react';
 import type { ScaleObject } from '../types';
+import { imageSources, resolveObjectImage } from '../lib/images';
 
 interface ObjectImageProps {
   object: ScaleObject;
@@ -9,7 +10,8 @@ interface ObjectImageProps {
 }
 
 export function ObjectImage({ object, revealed }: ObjectImageProps) {
-  const sources = useMemo(() => [object.image.src, ...object.image.fallbacks], [object]);
+  const resolved = useMemo(() => resolveObjectImage(object), [object]);
+  const sources = useMemo(() => imageSources(resolved), [resolved]);
   const [sourceIndex, setSourceIndex] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -46,10 +48,12 @@ export function ObjectImage({ object, revealed }: ObjectImageProps) {
         <motion.img
           key={source}
           src={source}
-          alt={object.image.alt}
-          style={{ objectPosition: object.image.focalPoint ?? '50% 50%' }}
-          initial={{ scale: 1.04, opacity: 0 }}
-          animate={{ scale: revealed ? 1.015 : 1, opacity: loaded ? 1 : 0 }}
+          alt={resolved.alt}
+          loading="lazy"
+          decoding="async"
+          style={{ objectPosition: resolved.focalPoint ?? '50% 50%' }}
+          initial={{ scale: 1.05, opacity: 0 }}
+          animate={{ scale: revealed ? 1.02 : 1, opacity: loaded ? 1 : 0 }}
           transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
           onLoad={() => setLoaded(true)}
           onError={() => {
@@ -66,7 +70,7 @@ export function ObjectImage({ object, revealed }: ObjectImageProps) {
       <div className="image-overlays" />
       <motion.div
         className="target-reticle"
-        animate={{ opacity: revealed ? 0.78 : 0.38, scale: revealed ? 1.04 : 1 }}
+        animate={{ opacity: revealed ? 0.82 : 0.36, scale: revealed ? 1.05 : 1 }}
         transition={{ duration: 0.5 }}
       />
       <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
@@ -76,14 +80,6 @@ export function ObjectImage({ object, revealed }: ObjectImageProps) {
             {object.name}
           </h2>
         </div>
-        <a
-          className="hidden text-right text-[10px] uppercase tracking-[0.18em] text-white/[0.34] transition hover:text-white/70 sm:block"
-          href={object.image.sourceUrl}
-          rel="noreferrer"
-          target="_blank"
-        >
-          {object.image.credit}
-        </a>
       </div>
     </div>
   );
